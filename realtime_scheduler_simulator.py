@@ -6,7 +6,7 @@ try:
     import matplotlib.pyplot as plt
     MATPLOTLIB_AVAILABLE = True
 except Exception:
-    MATPLOTLIB_AVAILABLE = True
+    MATPLOTLIB_AVAILABLE = False
 
 
 class Task:
