@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RTSim — A real-time scheduling algorithm simulator with Gantt chart visualization for RM, EDF, FCFS, and SJF.">
+    <title>RTSim — Real-Time Scheduling Algorithm Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar">
+        <div class="navbar__brand">
+            <div class="navbar__icon">⏱</div>
+            <span class="navbar__title">RTSim</span>
+            <span class="navbar__subtitle">Realtime Scheduling Tool</span>
+        </div>
+        <ul class="navbar__links">
+            <li><a class="navbar__link active" href="#simulation">▶ Simulation</a></li>
+            <li><a class="navbar__link" href="#gantt-section">◆ Analytics</a></li>
+            <li><a class="navbar__link" href="#results-panel">⇒ Compare</a></li>
+            <li><a class="navbar__link" href="#">ⓘ About</a></li>
+        </ul>
+    </nav>
+
+    <!-- ── MAIN CONTAINER ── -->
+    <div class="container" id="simulation">
+
+        <!-- ── CONTROLS CARD ── -->
+        <div class="card controls-card">
+            <div class="card__header">Task Input and Controls</div>
+            <div class="card__body">
+                <!-- Input Fields Row -->
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Task ID</label>
+                        <input type="text" id="inp-id" placeholder="P1" value="">
+                    </div>
+                    <div class="input-group">
+                        <label>Arrival</label>
+                        <input type="number" id="inp-arrival" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Burst</label>
+                        <input type="number" id="inp-burst" value="3" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Deadline</label>
+                        <input type="number" id="inp-deadline" value="10" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Period</label>
+                        <input type="number" id="inp-period" value="10" min="1">
+                    </div>
+                </div>
+
+                <!-- Buttons Row -->
+                <div class="btn-row">
+                    <button class="btn btn--teal" id="btn-add">＋ Add Task</button>
+                    <button class="btn btn--red" id="btn-delete">✕ Delete Selected</button>
+                    <button class="btn btn--dark" id="btn-sample">Load Sample</button>
+                    <button class="btn btn--orange" id="btn-reset">⟳ Reset All</button>
+
+                    <div class="btn-divider"></div>
+
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <select id="algo-select">
+                            <option value="RM">Rate Monotonic</option>
+                            <option value="EDF">EDF</option>
+                            <option value="FCFS">FCFS</option>
+                            <option value="SJF">SJF</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn--run" id="btn-simulate">
+                        <span>▶ Run Simulation</span>
+                        <div class="spinner" id="run-spinner"></div>
+                    </button>
+                    <button class="btn btn--blue" id="btn-step">⏭ Step Mode</button>
+                    <button class="btn btn--amber" id="btn-pause">⏸ Pause/Resume</button>
+                    <button class="btn btn--green" id="btn-compare">⇔ Compare All</button>
+                    <button class="btn btn--dark" id="btn-gantt">Show Gantt</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TWO PANELS: Task List + Results ── -->
+        <div class="panels-row">
+            <!-- Task List -->
+            <div class="card" id="task-panel">
+                <div class="card__header">Task List</div>
+                <div class="card__body" style="padding: 0;">
+                    <div class="table-scroll">
+                        <table class="data-table" id="task-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Task</th>
+                                    <th>Arrival</th>
+                                    <th>Burst</th>
+                                    <th>Deadline</th>
+                                    <th>Period</th>
+                                </tr>
+                            </thead>
+                            <tbody id="task-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-msg" id="task-empty">No tasks added yet. Click "Add Task" or "Load Sample".</div>
+                </div>
+            </div>
+
+            <!-- Simulation Results -->
+            <div class="card" id="results-panel">
+                <div class="card__header">Simulation Result</div>
+                <div class="card__body" style="padding: 0;">
+                    <div class="table-scroll">
+                        <table class="data-table" id="result-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Completion</th>
+                                    <th>Turnaround</th>
+                                    <th>Waiting</th>
+                                    <th>Response</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="result-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-msg" id="result-empty">Run a simulation to see results.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── STATS BAR ── -->
+        <div class="stats-bar">
+            <div class="stat-card stat-card--cpu">
+                <div class="stat-card__label">CPU Utilization</div>
+                <div class="stat-card__value" id="stat-cpu">—</div>
+            </div>
+            <div class="stat-card stat-card--missed">
+                <div class="stat-card__label">Missed Deadlines</div>
+                <div class="stat-card__value" id="stat-missed">—</div>
+            </div>
+            <div class="stat-card stat-card--met">
+                <div class="stat-card__label">Deadlines Met</div>
+                <div class="stat-card__value" id="stat-met">—</div>
+            </div>
+            <div class="stat-card stat-card--wait">
+                <div class="stat-card__label">Avg Wait</div>
+                <div class="stat-card__value" id="stat-wait">—</div>
+            </div>
+        </div>
+
+        <!-- ── GANTT CHART ── -->
+        <div class="card gantt-section" id="gantt-section">
+            <div class="card__header">Animated Gantt Chart</div>
+            <div class="gantt-container">
+                <canvas id="gantt-canvas"></canvas>
+                <div class="gantt-empty" id="gantt-empty">
+                    📋 Run a simulation to see Gantt Chart
+                </div>
+                <div class="tooltip" id="tooltip"></div>
+            </div>
+            <div class="legend" id="legend"></div>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
