@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real Time Scheduling Algorithm — A real-time scheduling algorithm simulator with Gantt chart visualization for RM, EDF, FCFS, and SJF.">
+    <title>Real Time Scheduling Algorithm Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar">
+        <div class="navbar__brand">
+            <div class="navbar__icon">⏱</div>
+            <span class="navbar__title">Real Time Scheduling Algorithm</span>
+            <span class="navbar__subtitle">Realtime Scheduling Tool</span>
+        </div>
+        <ul class="navbar__links">
+            <li><a class="navbar__link active" href="#simulation">▶ Simulation</a></li>
+            <li><a class="navbar__link" href="#gantt-section">◆ Analytics</a></li>
+            <li><a class="navbar__link" href="#results-panel">⇒ Compare</a></li>
+            <li><a class="navbar__link" href="#">ⓘ About</a></li>
+        </ul>
+    </nav>
+
+    <!-- ── MAIN CONTAINER ── -->
+    <div class="container" id="simulation">
+
+        <!-- ── CONTROLS CARD ── -->
+        <div class="card controls-card">
+            <div class="card__header">Task Input and Controls</div>
+            <div class="card__body">
+                <!-- Input Fields Row -->
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Task ID</label>
+                        <input type="text" id="inp-id" placeholder="P1" value="">
+                    </div>
+                    <div class="input-group">
+                        <label>Arrival</label>
+                        <input type="number" id="inp-arrival" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Burst</label>
+                        <input type="number" id="inp-burst" value="3" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Deadline</label>
+                        <input type="number" id="inp-deadline" value="10" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Period</label>
+                        <input type="number" id="inp-period" value="10" min="1">
+                    </div>
+                </div>
+
+                <!-- Buttons Row -->
+                <div class="btn-row">
+                    <button class="btn btn--teal" id="btn-add">＋ Add Task</button>
+                    <button class="btn btn--red" id="btn-delete">✕ Delete Selected</button>
+                    <button class="btn btn--dark" id="btn-sample">Load Sample</button>
+                    <button class="btn btn--orange" id="btn-reset">⟳ Reset All</button>
+
+                    <div class="btn-divider"></div>
+
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <select id="algo-select">
+                            <option value="RM">Rate Monotonic</option>
+                            <option value="EDF">EDF</option>
+                            <option value="FCFS">FCFS</option>
+                            <option value="SJF">SJF</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn--run" id="btn-simulate">
+                        <span>▶ Run Simulation</span>
+                        <div class="spinner" id="run-spinner"></div>
+                    </button>
+                    <button class="btn btn--blue" id="btn-step">⏭ Step Mode</button>
+                    <button class="btn btn--amber" id="btn-pause">⏸ Pause/Resume</button>
+                    <button class="btn btn--green" id="btn-compare">⇔ Compare All</button>
+                    <button class="btn btn--dark" id="btn-gantt">Show Gantt</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TWO PANELS: Task List + Results ── -->
+        <div class="panels-row">
+            <!-- Task List -->
+            <div class="card" id="task-panel">
+                <div class="card__header">Task List</div>
+                <div class="card__body" style="padding: 0;">
+                    <div class="table-scroll">
+                        <table class="data-table" id="task-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Task</th>
+                                    <th>Arrival</th>
+                                    <th>Burst</th>
+                                    <th>Deadline</th>
+                                    <th>Period</th>
+                                </tr>
+                            </thead>
+                            <tbody id="task-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-msg" id="task-empty">No tasks added yet. Click "Add Task" or "Load Sample".</div>
+                </div>
+            </div>
+
+            <!-- Simulation Results -->
+            <div class="card" id="results-panel">
+                <div class="card__header">Simulation Result</div>
+                <div class="card__body" style="padding: 0;">
+                    <div class="table-scroll">
+                        <table class="data-table" id="result-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Completion</th>
+                                    <th>Turnaround</th>
+                                    <th>Waiting</th>
+                                    <th>Response</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="result-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-msg" id="result-empty">Run a simulation to see results.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── STATS BAR ── -->
+        <div class="stats-bar">
+            <div class="stat-card stat-card--cpu">
+                <div class="stat-card__label">CPU Utilization</div>
+                <div class="stat-card__value" id="stat-cpu">—</div>
+            </div>
+            <div class="stat-card stat-card--missed">
+                <div class="stat-card__label">Missed Deadlines</div>
+                <div class="stat-card__value" id="stat-missed">—</div>
+            </div>
+            <div class="stat-card stat-card--met">
+                <div class="stat-card__label">Deadlines Met</div>
+                <div class="stat-card__value" id="stat-met">—</div>
+            </div>
+            <div class="stat-card stat-card--turn">
+                <div class="stat-card__label">Avg Turnaround</div>
+                <div class="stat-card__value" id="stat-turn">—</div>
+            </div>
+            <div class="stat-card stat-card--wait">
+                <div class="stat-card__label">Avg Wait</div>
+                <div class="stat-card__value" id="stat-wait">—</div>
+            </div>
+        </div>
+
+        <!-- ── GANTT CHART ── -->
+        <div class="card gantt-section" id="gantt-section">
+            <div class="card__header">Animated Gantt Chart</div>
+            <div class="gantt-container">
+                <canvas id="gantt-canvas"></canvas>
+                <div class="gantt-empty" id="gantt-empty">
+                    📋 Run a simulation to see Gantt Chart
+                </div>
+                <div class="tooltip" id="tooltip"></div>
+            </div>
+            <div class="legend" id="legend"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- ── ANALYTICS SECTION ── -->
+        <!-- ══════════════════════════════════════════════ -->
+        <div id="analytics-section">
+            <div class="card">
+                <div class="card__header">◆ Analytics — Per-Task Breakdown</div>
+                <div class="card__body" style="padding: 0;">
+                    <div class="table-scroll" style="max-height: 300px;">
+                        <table class="data-table" id="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Jobs Released</th>
+                                    <th>Jobs Completed</th>
+                                    <th>Jobs Missed</th>
+                                    <th>Avg Turnaround</th>
+                                    <th>Avg Waiting</th>
+                                    <th>Avg Response</th>
+                                    <th>Miss Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analytics-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-msg" id="analytics-empty">Run a simulation to see per-task analytics.</div>
+                </div>
+            </div>
+
+            <!-- Bar Chart Canvas -->
+            <div class="card" style="margin-top: 1rem;">
+                <div class="card__header">◆ Analytics — Visual Comparison</div>
+                <div class="card__body">
+                    <canvas id="analytics-chart" style="width:100%; height:250px;"></canvas>
+                    <div class="empty-msg" id="analytics-chart-empty">Run a simulation to see the analytics chart.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- ── COMPARE SECTION ── -->
+        <!-- ══════════════════════════════════════════════ -->
+        <div id="compare-section">
+            <div class="card">
+                <div class="card__header">⇒ Algorithm Comparison — All Algorithms Side-by-Side</div>
+                <div class="card__body" style="padding: 0;">
+                    <div class="table-scroll" style="max-height: 300px;">
+                        <table class="data-table" id="compare-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Rate Monotonic</th>
+                                    <th>EDF</th>
+                                    <th>FCFS</th>
+                                    <th>SJF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="compare-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-msg" id="compare-empty">Click "⇔ Compare All" to run all algorithms and see side-by-side results.</div>
+                </div>
+            </div>
+
+            <!-- Comparison Bar Chart -->
+            <div class="card" style="margin-top: 1rem;">
+                <div class="card__header">⇒ Comparison Chart</div>
+                <div class="card__body">
+                    <canvas id="compare-chart" style="width:100%; height:250px;"></canvas>
+                    <div class="empty-msg" id="compare-chart-empty">Click "⇔ Compare All" to see comparison chart.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- ── ABOUT SECTION ── -->
+        <!-- ══════════════════════════════════════════════ -->
+        <div id="about-section">
+            <div class="card">
+                <div class="card__header">ⓘ About This Simulator</div>
+                <div class="card__body about-content">
+                    <h2>Real-Time Scheduling Algorithm Simulator</h2>
+                    <p>This tool simulates and visualizes real-time CPU scheduling algorithms, helping users understand how tasks are prioritized, preempted, and scheduled under different policies. It is designed as an educational tool for Operating Systems courses.</p>
+
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <h3 style="color: var(--accent-teal);">Rate Monotonic (RM)</h3>
+                            <p>A <strong>fixed-priority preemptive</strong> algorithm. Tasks with shorter periods get higher priority. Optimal among fixed-priority algorithms for schedulable task sets. Priority is assigned at design time and does not change.</p>
+                            <ul>
+                                <li>Priority = 1 / Period (shorter period → higher priority)</li>
+                                <li>Preemptive: higher-priority tasks interrupt lower ones</li>
+                                <li>May miss deadlines if CPU utilization exceeds the RM bound</li>
+                            </ul>
+                        </div>
+                        <div class="about-card">
+                            <h3 style="color: var(--accent-blue);">Earliest Deadline First (EDF)</h3>
+                            <p>A <strong>dynamic-priority preemptive</strong> algorithm. The task with the nearest absolute deadline runs first. Optimal for uniprocessor systems — can achieve 100% CPU utilization without missing deadlines.</p>
+                            <ul>
+                                <li>Priority changes dynamically based on current deadlines</li>
+                                <li>Preemptive: a newly arrived task with an earlier deadline preempts</li>
+                                <li>Theoretically optimal for single-processor scheduling</li>
+                            </ul>
+                        </div>
+                        <div class="about-card">
+                            <h3 style="color: var(--accent-orange);">First-Come, First-Served (FCFS)</h3>
+                            <p>The simplest scheduling algorithm. Tasks are executed in the order they arrive. <strong>Non-preemptive</strong> — once a task starts, it runs to completion.</p>
+                            <ul>
+                                <li>No priority mechanism — strictly arrival order</li>
+                                <li>Simple but can cause long waiting times (convoy effect)</li>
+                                <li>Not suitable for real-time systems with strict deadlines</li>
+                            </ul>
+                        </div>
+                        <div class="about-card">
+                            <h3 style="color: var(--accent-amber);">Shortest Job First (SJF)</h3>
+                            <p>Selects the task with the smallest burst (execution) time. <strong>Non-preemptive</strong> — minimizes average waiting time for a given set of tasks.</p>
+                            <ul>
+                                <li>Optimal for minimizing average waiting time</li>
+                                <li>Requires knowing burst times in advance</li>
+                                <li>Can cause starvation for long tasks</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 1.5rem;">How to Use</h3>
+                    <ol class="about-steps">
+                        <li><strong>Add Tasks</strong> — Enter task parameters (ID, arrival, burst, deadline, period) and click "Add Task", or click "Load Sample" for a quick start.</li>
+                        <li><strong>Select Algorithm</strong> — Choose RM, EDF, FCFS, or SJF from the dropdown.</li>
+                        <li><strong>Run Simulation</strong> — Click the green "Run Simulation" button to execute.</li>
+                        <li><strong>Analyze</strong> — View the Gantt chart, stats cards, simulation results table, and per-task analytics.</li>
+                        <li><strong>Compare</strong> — Click "Compare All" to run all 4 algorithms and see a side-by-side comparison.</li>
+                    </ol>
+
+                    <h3 style="margin-top: 1.5rem;">Gantt Chart Legend</h3>
+                    <ul class="about-legend">
+                        <li><span style="color: var(--accent-teal);">■</span> Colored blocks represent task execution during that time unit</li>
+                        <li><span style="color: var(--accent-red);">▼</span> Red dashed lines mark task deadlines</li>
+                        <li><span style="color: var(--accent-amber);">⚡</span> Lightning bolts indicate preemption events</li>
+                        <li><span style="color: #ff0000; font-weight: bold;">✕</span> Red X marks indicate missed deadlines</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -331,7 +331,7 @@ body {
 /* ── STATS BAR ── */
 .stats-bar {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.75rem;
 }
 
@@ -356,6 +356,7 @@ body {
 .stat-card--cpu::before    { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
 .stat-card--missed::before { background: linear-gradient(90deg, var(--accent-red), var(--accent-pink)); }
 .stat-card--met::before    { background: linear-gradient(90deg, var(--accent-teal), var(--accent-green)); }
+.stat-card--turn::before   { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
 .stat-card--wait::before   { background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
 
 .stat-card__label {
@@ -490,4 +491,127 @@ body {
     .panels-row { grid-template-columns: 1fr; }
     .stats-bar { grid-template-columns: 1fr 1fr; }
     .input-row { flex-direction: column; align-items: flex-start; }
+    .about-grid { grid-template-columns: 1fr; }
+}
+
+/* ── ABOUT SECTION ── */
+.about-content h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--accent-teal);
+    margin-bottom: 0.5rem;
+}
+
+.about-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.about-content p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.about-card {
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem;
+    transition: transform 200ms, box-shadow 200ms;
+}
+
+.about-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.about-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+}
+
+.about-card p {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.about-card ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.about-card ul li {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    padding-left: 1rem;
+    position: relative;
+}
+
+.about-card ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+}
+
+.about-steps {
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.about-steps li {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.about-steps li strong {
+    color: var(--text-primary);
+}
+
+.about-legend {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.about-legend li {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.about-legend li span {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* ── COMPARE HIGHLIGHT ── */
+.compare-best {
+    color: var(--accent-green) !important;
+    font-weight: 700;
+}
+
+.compare-worst {
+    color: var(--accent-red) !important;
 }
